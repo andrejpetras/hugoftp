@@ -47,7 +47,7 @@ func main() {
 	})
 	err := rootCmd.Execute()
 	if err != nil {
-		log.Panic(err)
+		log.Debug(err)
 	}
 }
 
