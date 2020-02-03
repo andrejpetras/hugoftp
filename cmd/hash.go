@@ -61,7 +61,7 @@ var (
 
 			yaml, err := yaml.Marshal(&data)
 			if err != nil {
-				log.Panic("error: %v", err)
+				log.Panic(err)
 			}
 			writeToFile(options.OutputFile, yaml)
 		},
