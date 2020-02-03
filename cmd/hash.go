@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"crypto/sha1"
 	"encoding/hex"
 	log "github.com/sirupsen/logrus"
@@ -62,7 +61,7 @@ var (
 			if err != nil {
 				log.Panic("error: %v", err)
 			}
-			writeToFile("test.hash", yaml)
+			writeToFile(options.OutputFile, yaml)
 		},
 		TraverseChildren: true,
 	}
@@ -90,27 +89,4 @@ func readHashFlags() hashFlags {
 		panic(err)
 	}
 	return d
-}
-
-func writeToFile(filename string, data []byte) {
-	dir := filepath.Dir(filename)
-	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-
-	file, err := os.Create(filename)
-	if err != nil {
-		panic(err)
-	}
-	w := bufio.NewWriter(file)
-
-	_, err = w.Write(data)
-	if err != nil {
-		panic(err)
-	}
-	err = w.Flush()
-	if err != nil {
-		panic(err)
-	}
 }

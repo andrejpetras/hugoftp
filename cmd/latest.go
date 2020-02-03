@@ -33,12 +33,10 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			options := readLatestFlags()
 			log.Infof("Download latest hash file: %s", options.OutputFile)
-			log.Infof("%s %s", options.Host, options.Port)
 			c, err := ftp.Dial(options.Host + ":" + options.Port, ftp.DialWithTimeout(5*time.Second))
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Infof("%s %s", options.Username, options.Password)
 			err = c.Login(options.Username, options.Password)
 			if err != nil {
 				log.Fatal(err)
