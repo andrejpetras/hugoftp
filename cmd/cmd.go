@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
@@ -11,6 +12,24 @@ import (
 // Main the commands method
 func Main(rootCmd *cobra.Command) {
 	rootCmd.AddCommand(hashCmd, latestCmd, diffCmd, deployCmd)
+}
+
+func addFtpServer(command *cobra.Command) {
+	addFlag(command, "host", "s", "", "Ftp server host name")
+	setFlagRequired(command, "host")
+	addFlag(command,"username", "u", "", "The ftp server user")
+	setFlagRequired(command, "username")
+	addFlag(command,"password", "w", "", "The ftp server password")
+	setFlagRequired(command, "password")
+	addFlag(command,"port", "p", "21", "Ftp server port")
+	addFlag(command,"path", "a", "/", "Ftp server path")
+}
+
+func setFlagRequired(command *cobra.Command, name string) {
+	err := command.MarkFlagRequired(name)
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 func addFlag(command *cobra.Command, name, shorthand string, value string, usage string) {

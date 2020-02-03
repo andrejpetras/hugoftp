@@ -9,20 +9,24 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 )
 
 func init() {
-	addFlag(deployCmd, "diff-file", "d", "latest.diff", "The remote hash file")
+	addFlag(deployCmd, "diff-file", "f", "latest.diff", "The remote hash file")
+	addFlag(deployCmd, "directory", "d", "public/", "The directory for the hash file")
+	addFtpServer(deployCmd)
 }
 
 type deployFlags struct {
-	DiffFile string `mapstructure:"diff-file"`
-	Host     string `mapstructure:"host"`
-	Path     string `mapstructure:"path"`
-	Username string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
-	Port     string `mapstructure:"port"`
+	DiffFile  string `mapstructure:"diff-file"`
+	Directory string `mapstructure:"directory"`
+	Host      string `mapstructure:"host"`
+	Path      string `mapstructure:"path"`
+	Username  string `mapstructure:"username"`
+	Password  string `mapstructure:"password"`
+	Port      string `mapstructure:"port"`
 }
 
 var (
@@ -40,7 +44,7 @@ var (
 			i := 1
 
 			// open ftp connection
-			ftp, err := ftp.Dial(options.Host + ":" + options.Port, ftp.DialWithTimeout(5*time.Second))
+			ftp, err := ftp.Dial(options.Host+":"+options.Port, ftp.DialWithTimeout(5*time.Second))
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -50,33 +54,42 @@ var (
 			}
 
 			// add new files
-			for _, v := range diff.Add {
-				// create directory
-
-				// upload file
-				log.Infof("[%d/%d] ADD    %s", size, i, v)
+			for _, file := range diff.Add {
+				log.Infof("[%d/%d] ADD    %s", size, i, file)
 				i++
+				// create directory
+				index := strings.LastIndex(file, "/")
+				if index != -1 {
+					dir := file[0:index]
+					log.Debugf("Create the directory %s for the file %s", dir, file)
+					err = ftp.MakeDir(dir)
+					if err != nil {
+						panic(err)
+					}
+				}
+				// upload file
+				uploadFile(options.Directory, file, ftp)
 			}
 			// update files
-			for _, v := range diff.Update {
-				log.Infof("[%d/%d] UPDATE %s", size, i, v)
+			for _, file := range diff.Update {
+				log.Infof("[%d/%d] UPDATE %s", size, i, file)
 				i++
-				uploadFile(v, ftp)
+				uploadFile(options.Directory, file, ftp)
 			}
 			// delete files
-			for _, v := range diff.Delete {
-				log.Infof("[%d/%d] DELETE %s", size, i, v)
+			for _, file := range diff.Delete {
+				log.Infof("[%d/%d] DELETE %s", size, i, file)
 				i++
-
-				err = ftp.Delete(v)
+				err = ftp.Delete(file)
 				if err != nil {
 					panic(err)
 				}
 			}
 			// after
-			for _, v := range diff.After {
-				log.Infof("[%d/%d] AFTER  %s", size, i, v)
+			for _, file := range diff.After {
+				log.Infof("[%d/%d] AFTER  %s", size, i, file)
 				i++
+				uploadFile(options.Directory, file, ftp)
 			}
 
 			if err := ftp.Quit(); err != nil {
@@ -87,14 +100,16 @@ var (
 	}
 )
 
-func uploadFile(filename string, ftp *ftp.ServerConn)  {
-	f, err := os.Open(filename)
+func uploadFile(dir, file string, ftp *ftp.ServerConn) {
+	source := dir + file
+	log.Debugf("Upload file %s  to ftp file %s", source, file)
+	f, err := os.Open(source)
 	if err != nil {
 		log.Panic(err)
 	}
 	tmp := bufio.NewReader(f)
 
-	err = ftp.Stor(filename, tmp)
+	err = ftp.Stor(file, tmp)
 	if err != nil {
 		panic(err)
 	}
@@ -111,7 +126,7 @@ func readDeployFlags() deployFlags {
 
 func loadDiffFile(filename string) DiffFile {
 	result := DiffFile{}
-
+	log.Debugf("Load diff file %s", filename)
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Panic(err)

@@ -13,6 +13,7 @@ import (
 func init() {
 	addFlag(latestCmd, "output-file", "o", "latest.hash", "The output hash file")
 	addFlag(latestCmd, "remote-file", "r", "latest.hash", "The remote hash file")
+	addFtpServer(latestCmd)
 }
 
 type latestFlags struct {

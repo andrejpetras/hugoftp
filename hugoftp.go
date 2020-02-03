@@ -19,11 +19,6 @@ var (
 	output    = "json"
 	verbose   bool
 	cfgFile   string
-	host      string
-	username  string
-	password  string
-	port      int
-	path      string
 	rootCmd   = &cobra.Command{
 		Use:   "hugoftp",
 		Short: "hugoftp ftp release utility",
@@ -61,24 +56,11 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.hugoftp.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	addFlag("host", "s", "", "Ftp server host name")
-	addFlag("username", "u", "", "The ftp server user")
-	addFlag("password", "w", "", "The ftp server password")
-	addFlag("port", "p", "21", "Ftp server port")
-	addFlag("path", "a", "/", "Ftp server path")
 
 	versionCmd.Flags().BoolVarP(&shortened, "short", "s", false, "Print just the version number.")
 	versionCmd.Flags().StringVarP(&output, "output", "o", "json", "Output format. One of 'yaml' or 'json'.")
 	rootCmd.AddCommand(versionCmd)
 	cmd.Main(rootCmd)
-}
-
-func addFlag(name, short, value, desc string) {
-	rootCmd.PersistentFlags().StringP(name, short, value, desc)
-	e := viper.BindPFlag(name, rootCmd.PersistentFlags().Lookup(name))
-	if e != nil {
-		log.Panic(e)
-	}
 }
 
 func initConfig() {
