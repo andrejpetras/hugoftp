@@ -124,8 +124,8 @@ func readDeployFlags() deployFlags {
 	return mavenOptions
 }
 
-func loadDiffFile(filename string) DiffFile {
-	result := DiffFile{}
+func loadDiffFile(filename string) diffFile {
+	result := diffFile{}
 	log.Debugf("Load diff file %s", filename)
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {

@@ -17,12 +17,12 @@ func Main(rootCmd *cobra.Command) {
 func addFtpServer(command *cobra.Command) {
 	addFlag(command, "host", "s", "", "Ftp server host name")
 	setFlagRequired(command, "host")
-	addFlag(command,"username", "u", "", "The ftp server user")
+	addFlag(command, "username", "u", "", "The ftp server user")
 	setFlagRequired(command, "username")
-	addFlag(command,"password", "w", "", "The ftp server password")
+	addFlag(command, "password", "w", "", "The ftp server password")
 	setFlagRequired(command, "password")
-	addFlag(command,"port", "p", "21", "Ftp server port")
-	addFlag(command,"path", "a", "/", "Ftp server path")
+	addFlag(command, "port", "p", "21", "Ftp server port")
+	addFlag(command, "path", "a", "/", "Ftp server path")
 }
 
 func setFlagRequired(command *cobra.Command, name string) {
@@ -34,10 +34,6 @@ func setFlagRequired(command *cobra.Command, name string) {
 
 func addFlag(command *cobra.Command, name, shorthand string, value string, usage string) {
 	command.Flags().StringP(name, shorthand, value, usage)
-	AddViper(command, name)
-}
-
-func AddViper(command *cobra.Command, name string) {
 	err := viper.BindPFlag(name, command.Flags().Lookup(name))
 	if err != nil {
 		panic(err)

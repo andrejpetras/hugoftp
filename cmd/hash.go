@@ -18,7 +18,7 @@ func init() {
 	addFlag(hashCmd, "directory", "d", "public/", "The directory for the hash file")
 }
 
-type HashFile struct {
+type hashFile struct {
 	Version string            `yaml:"version"`
 	Files   map[string]string `yaml:"data"`
 }
@@ -37,7 +37,7 @@ var (
 			options := readHashFlags()
 			log.Infof("Create hash file: %s for the directory: %s", options.OutputFile, options.Directory)
 
-			data := HashFile{}
+			data := hashFile{}
 			data.Version = "1234"
 			data.Files = make(map[string]string)
 

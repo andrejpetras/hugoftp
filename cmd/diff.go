@@ -14,7 +14,7 @@ func init() {
 	addFlag(diffCmd, "old-hash-file", "e", "latest.hash", "The remote hash file")
 }
 
-type DiffFile struct {
+type diffFile struct {
 	OldVersion string   `yaml:"oldVersion"`
 	NewVersion string   `yaml:"newVersion"`
 	Add        []string `yaml:"add"`
@@ -41,7 +41,7 @@ var (
 			oldHash := loadHash(options.OldHashFile)
 			newHash := loadHash(options.NewHashFile)
 
-			diffFile := DiffFile{}
+			diffFile := diffFile{}
 			diffFile.OldVersion = oldHash.Version
 			diffFile.NewVersion = newHash.Version
 
@@ -58,7 +58,7 @@ var (
 				}
 			}
 
-			for k, _ := range oldHash.Files {
+			for k := range oldHash.Files {
 				vv := newHash.Files[k]
 				if len(vv) == 0 {
 					diffFile.Delete = append(diffFile.Delete, k)
@@ -88,8 +88,8 @@ func readDiffFlags() diffFlags {
 	return mavenOptions
 }
 
-func loadHash(filename string) HashFile {
-	remoteHash := HashFile{}
+func loadHash(filename string) hashFile {
+	remoteHash := hashFile{}
 
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
