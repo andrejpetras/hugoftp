@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	log "github.com/sirupsen/logrus"
@@ -9,6 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -38,7 +40,7 @@ var (
 			log.Infof("Create hash file: %s for the directory: %s", options.OutputFile, options.Directory)
 
 			data := hashFile{}
-			data.Version = "1234"
+			data.Version = gitHash("7")
 			data.Files = make(map[string]string)
 
 			err := filepath.Walk(options.Directory, func(path string, info os.FileInfo, err error) error {
@@ -89,4 +91,21 @@ func readHashFlags() hashFlags {
 		panic(err)
 	}
 	return d
+}
+
+func gitHash(length string) string {
+	if len(length) > 0 {
+		return execCmdOutput("git", "rev-parse", "--short="+length, "HEAD")
+	}
+	return execCmdOutput("git", "rev-parse", "HEAD")
+}
+
+func execCmdOutput(name string, arg ...string) string {
+	log.Debug(name+" ", strings.Join(arg, " "))
+	out, err := exec.Command(name, arg...).CombinedOutput()
+	log.Debug("Output:\n", string(out))
+	if err != nil {
+		log.Panic(err)
+	}
+	return string(bytes.TrimRight(out, "\n"))
 }
