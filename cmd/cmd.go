@@ -11,54 +11,48 @@ import (
 
 // Main the commands method
 func Main(rootCmd *cobra.Command) {
-	rootCmd.AddCommand(hashCmd, latestCmd, diffCmd, deployCmd)
+	rootCmd.AddCommand(hashCmd, diffCmd, serverCmd)
 }
 
-func addFtpServer(command *cobra.Command) {
-	addFlag(command, "host", "s", "", "Ftp server host name")
-	setFlagRequired(command, "host")
-	addFlag(command, "username", "u", "", "The ftp server user")
-	setFlagRequired(command, "username")
-	addFlag(command, "password", "w", "", "The ftp server password")
-	setFlagRequired(command, "password")
-	addFlag(command, "port", "p", "21", "Ftp server port")
-	addFlag(command, "path", "a", "/", "Ftp server path")
-}
-
-func setFlagRequired(command *cobra.Command, name string) {
-	err := command.MarkFlagRequired(name)
-	if err != nil {
-		log.Panic(err)
+func check(e error) {
+	if e != nil {
+		log.Panic(e)
 	}
 }
 
-func addFlag(command *cobra.Command, name, shorthand string, value string, usage string) {
-	command.Flags().StringP(name, shorthand, value, usage)
-	err := viper.BindPFlag(name, command.Flags().Lookup(name))
+func addPersistentFlag(command *cobra.Command, name, shorthand string, value string, usage string, required bool) {
+	command.PersistentFlags().StringP(name, shorthand, value, usage)
+	err := viper.BindPFlag(name, command.PersistentFlags().Lookup(name))
 	if err != nil {
 		panic(err)
+	}
+	if required {
+		err := command.MarkPersistentFlagRequired(name)
+		check(err)
+	}
+}
+
+func addFlag(command *cobra.Command, name, shorthand string, value string, usage string, required bool) {
+	command.Flags().StringP(name, shorthand, value, usage)
+	err := viper.BindPFlag(name, command.Flags().Lookup(name))
+	check(err)
+	if required {
+		err := command.MarkFlagRequired(name)
+		check(err)
 	}
 }
 
 func writeToFile(filename string, data []byte) {
 	dir := filepath.Dir(filename)
 	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 
 	file, err := os.Create(filename)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 	w := bufio.NewWriter(file)
 
 	_, err = w.Write(data)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 	err = w.Flush()
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 }

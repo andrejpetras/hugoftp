@@ -16,8 +16,8 @@ import (
 )
 
 func init() {
-	addFlag(hashCmd, "output-file", "o", "public/latest.hash", "The output hash file")
-	addFlag(hashCmd, "directory", "d", "public/", "The directory for the hash file")
+	addFlag(hashCmd, "hash-output-file", "e", "public/latest.hash", "The output hash file", false)
+	addFlag(hashCmd, "hash-directory", "d", "public/", "The directory for the hash file", false)
 }
 
 type hashFile struct {
@@ -26,8 +26,8 @@ type hashFile struct {
 }
 
 type hashFlags struct {
-	OutputFile string `mapstructure:"output-file"`
-	Directory  string `mapstructure:"directory"`
+	OutputFile string `mapstructure:"hash-output-file"`
+	Directory  string `mapstructure:"hash-directory"`
 }
 
 var (
@@ -43,7 +43,10 @@ var (
 			data.Version = gitHash("7")
 			data.Files = make(map[string]string)
 
-			err := filepath.Walk(options.Directory, func(path string, info os.FileInfo, err error) error {
+			err := os.Remove(options.OutputFile)
+			check(err)
+
+			err = filepath.Walk(options.Directory, func(path string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -55,25 +58,19 @@ var (
 				}
 				return nil
 			})
-			if err != nil {
-				log.Panic(err)
-			}
+			check(err)
 
 			yaml, err := yaml.Marshal(&data)
-			if err != nil {
-				log.Panic(err)
-			}
+			check(err)
 			writeToFile(options.OutputFile, yaml)
 		},
-		TraverseChildren: true,
+		TraverseChildren: false,
 	}
 )
 
 func hash(path string) string {
 	f, err := os.Open(path)
-	if err != nil {
-		log.Panic(err)
-	}
+	check(err)
 	defer f.Close()
 
 	h := sha1.New()
@@ -87,9 +84,7 @@ func hash(path string) string {
 func readHashFlags() hashFlags {
 	d := hashFlags{}
 	err := viper.Unmarshal(&d)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 	return d
 }
 
@@ -104,8 +99,6 @@ func execCmdOutput(name string, arg ...string) string {
 	log.Debug(name+" ", strings.Join(arg, " "))
 	out, err := exec.Command(name, arg...).CombinedOutput()
 	log.Debug("Output:\n", string(out))
-	if err != nil {
-		log.Panic(err)
-	}
+	check(err)
 	return string(bytes.TrimRight(out, "\n"))
 }

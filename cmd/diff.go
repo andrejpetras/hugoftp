@@ -6,12 +6,13 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"strings"
 )
 
 func init() {
-	addFlag(diffCmd, "diff-file", "i", "latest.diff", "The diff hash file")
-	addFlag(diffCmd, "new-hash-file", "b", "public/latest.hash", "The local hash file")
-	addFlag(diffCmd, "old-hash-file", "e", "latest.hash", "The remote hash file")
+	addFlag(diffCmd, "diff-file", "i", "latest.diff", "The diff hash file", false)
+	addFlag(diffCmd, "diff-new-hash-file", "b", "public/latest.hash", "The local hash file", false)
+	addFlag(diffCmd, "diff-old-hash-file", "e", "latest.hash", "The remote hash file", false)
 }
 
 type diffFile struct {
@@ -25,8 +26,8 @@ type diffFile struct {
 
 type diffFlags struct {
 	OutputFile  string `mapstructure:"diff-file"`
-	NewHashFile string `mapstructure:"new-hash-file"`
-	OldHashFile string `mapstructure:"old-hash-file"`
+	NewHashFile string `mapstructure:"diff-new-hash-file"`
+	OldHashFile string `mapstructure:"diff-old-hash-file"`
 }
 
 var (
@@ -45,7 +46,12 @@ var (
 			diffFile.OldVersion = oldHash.Version
 			diffFile.NewVersion = newHash.Version
 
-			diffFile.After = append(diffFile.After, options.NewHashFile)
+			hashFile := options.NewHashFile
+			index := strings.LastIndex(hashFile, "/")
+			if index != -1 {
+				hashFile = hashFile[index+1:]
+			}
+			diffFile.After = append(diffFile.After, hashFile)
 
 			for k, v := range newHash.Files {
 				h := oldHash.Files[k]
@@ -68,23 +74,20 @@ var (
 			log.Infof("Add    %d", len(diffFile.Add))
 			log.Infof("Update %d", len(diffFile.Update))
 			log.Infof("Delete %d", len(diffFile.Delete))
+			log.Infof("After %d", len(diffFile.After))
 
 			yaml, err := yaml.Marshal(&diffFile)
-			if err != nil {
-				log.Panic(err)
-			}
+			check(err)
 			writeToFile(options.OutputFile, yaml)
 		},
-		TraverseChildren: true,
+		TraverseChildren: false,
 	}
 )
 
 func readDiffFlags() diffFlags {
 	mavenOptions := diffFlags{}
 	err := viper.Unmarshal(&mavenOptions)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 	return mavenOptions
 }
 
@@ -92,12 +95,10 @@ func loadHash(filename string) hashFile {
 	remoteHash := hashFile{}
 
 	yamlFile, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Panic(err)
-	}
+	check(err)
+
 	err = yaml.Unmarshal(yamlFile, &remoteHash)
-	if err != nil {
-		log.Panic(err)
-	}
+	check(err)
+
 	return remoteHash
 }
