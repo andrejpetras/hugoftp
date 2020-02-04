@@ -80,7 +80,7 @@ var (
 			if len(newDir) > 0 {
 				tmpDir := []string{newDir[0]}
 				for _, d := range newDir {
-					b, i := HasPrefix(tmpDir, d)
+					b, i := hasPrefix(tmpDir, d)
 					if b {
 						if i != -1 {
 							tmpDir[i] = d
@@ -111,7 +111,7 @@ var (
 	}
 )
 
-func HasPrefix(tmpDir []string, dir string) (bool, int) {
+func hasPrefix(tmpDir []string, dir string) (bool, int) {
 	for i, d2 := range tmpDir {
 		if strings.HasPrefix(d2, dir) {
 			return true, -1
