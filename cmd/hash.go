@@ -16,8 +16,8 @@ import (
 )
 
 func init() {
-	addFlag(hashCmd, "hash-output-file", "e", "public/latest.hash", "The output hash file", false)
-	addFlag(hashCmd, "hash-directory", "d", "public/", "The directory for the hash file", false)
+	addFlag(hashCmd, "hash-output-file", "e", "public/latest.hash", "The output hash file")
+	addFlag(hashCmd, "hash-directory", "d", "public/", "The directory for the hash file")
 }
 
 type hashFile struct {

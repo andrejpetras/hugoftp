@@ -15,18 +15,18 @@ import (
 )
 
 func init() {
-	addPersistentFlag(serverCmd, "host", "s", "", "Ftp server host name", true)
-	addPersistentFlag(serverCmd, "username", "u", "", "The ftp server user", true)
-	addPersistentFlag(serverCmd, "password", "w", "", "The ftp server password", true)
-	addPersistentFlag(serverCmd, "port", "p", "21", "Ftp server port", false)
+	addPersistentFlag(serverCmd, "host", "s", "", "Ftp server host name (required)")
+	addPersistentFlag(serverCmd, "username", "u", "", "The ftp server user (required)")
+	addPersistentFlag(serverCmd, "password", "w", "", "The ftp server password (required)")
+	addPersistentFlag(serverCmd, "port", "p", "21", "Ftp server port")
 
-	addFlag(deployCmd, "deploy-diff-file", "f", "latest.diff", "The remote hash file", false)
-	addFlag(deployCmd, "deploy-directory", "d", "public/", "The directory for the hash file", false)
-	addFlag(deployCmd, "deploy-path", "a", "/", "Ftp server path", false)
+	addFlag(deployCmd, "deploy-diff-file", "f", "latest.diff", "The remote hash file")
+	addFlag(deployCmd, "deploy-directory", "d", "public/", "The directory for the hash file")
+	addFlag(deployCmd, "deploy-path", "a", "/", "Ftp server path")
 	serverCmd.AddCommand(deployCmd)
 
-	addFlag(latestCmd, "latest-local-file", "o", "latest.hash", "The output hash file", false)
-	addFlag(latestCmd, "latest-remote-file", "r", "latest.hash", "The remote hash file", false)
+	addFlag(latestCmd, "latest-local-file", "o", "latest.hash", "The output hash file")
+	addFlag(latestCmd, "latest-remote-file", "r", "latest.hash", "The remote hash file")
 	serverCmd.AddCommand(latestCmd)
 }
 
@@ -159,10 +159,19 @@ func uploadFile(dir, file string, ftp *ftp.ServerConn) {
 }
 
 func readServerFlags() serverFlags {
-	mavenOptions := serverFlags{}
-	err := viper.Unmarshal(&mavenOptions)
+	result := serverFlags{}
+	err := viper.Unmarshal(&result)
 	check(err)
-	return mavenOptions
+	if len(result.Host) == 0 {
+		log.Fatal("The FTP server host name is required")
+	}
+	if len(result.Username) == 0 {
+		log.Fatal("The FTP server user name is required")
+	}
+	if len(result.Password) == 0 {
+		log.Fatal("The FTP server user password is required")
+	}
+	return result
 }
 
 func loadDiffFile(filename string) diffFile {

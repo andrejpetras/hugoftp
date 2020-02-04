@@ -10,9 +10,9 @@ import (
 )
 
 func init() {
-	addFlag(diffCmd, "diff-file", "i", "latest.diff", "The diff hash file", false)
-	addFlag(diffCmd, "diff-new-hash-file", "b", "public/latest.hash", "The local hash file", false)
-	addFlag(diffCmd, "diff-old-hash-file", "e", "latest.hash", "The remote hash file", false)
+	addFlag(diffCmd, "diff-file", "i", "latest.diff", "The diff hash file")
+	addFlag(diffCmd, "diff-new-hash-file", "b", "public/latest.hash", "The local hash file")
+	addFlag(diffCmd, "diff-old-hash-file", "e", "latest.hash", "The remote hash file")
 }
 
 type diffFile struct {

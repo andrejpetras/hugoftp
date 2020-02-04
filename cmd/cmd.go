@@ -20,26 +20,16 @@ func check(e error) {
 	}
 }
 
-func addPersistentFlag(command *cobra.Command, name, shorthand string, value string, usage string, required bool) {
+func addPersistentFlag(command *cobra.Command, name, shorthand string, value string, usage string) {
 	command.PersistentFlags().StringP(name, shorthand, value, usage)
 	err := viper.BindPFlag(name, command.PersistentFlags().Lookup(name))
-	if err != nil {
-		panic(err)
-	}
-	if required {
-		err := command.MarkPersistentFlagRequired(name)
-		check(err)
-	}
+	check(err)
 }
 
-func addFlag(command *cobra.Command, name, shorthand string, value string, usage string, required bool) {
+func addFlag(command *cobra.Command, name, shorthand string, value string, usage string) {
 	command.Flags().StringP(name, shorthand, value, usage)
 	err := viper.BindPFlag(name, command.Flags().Lookup(name))
 	check(err)
-	if required {
-		err := command.MarkFlagRequired(name)
-		check(err)
-	}
 }
 
 func writeToFile(filename string, data []byte) {
