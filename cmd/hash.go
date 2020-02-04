@@ -43,8 +43,12 @@ var (
 			data.Version = gitHash("7")
 			data.Files = make(map[string]string)
 
-			err := os.Remove(options.OutputFile)
-			check(err)
+			info, err := os.Stat(options.OutputFile)
+			if !os.IsNotExist(err) && !info.IsDir() {
+				log.Debugf("Delete old hash file %s", options.OutputFile)
+				err := os.Remove(options.OutputFile)
+				check(err)
+			}
 
 			err = filepath.Walk(options.Directory, func(path string, info os.FileInfo, err error) error {
 				if err != nil {
