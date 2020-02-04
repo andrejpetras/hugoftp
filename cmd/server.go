@@ -58,25 +58,24 @@ var (
 			log.Infof("Start deployment %s", options.DiffFile)
 			diff := loadDiffFile(options.DiffFile)
 
-			size := len(diff.Add) + len(diff.Update) + len(diff.Delete) + len(diff.After)
+			size := len(diff.Add) + len(diff.Update) + len(diff.Delete) + len(diff.After) + len(diff.Dir)
 			log.Infof("[%d/0]", size)
 			i := 1
 
 			// open ftp connection
 			ftp := connectFtp(options)
 
+			// check directory
+			for _, dir := range diff.Dir {
+				log.Infof("[%d/%d] MKDIR  %s", size, i, dir)
+				i++
+				createDirectory(ftp, dir, options.Path)
+			}
+
 			// add new files
 			for _, file := range diff.Add {
 				log.Infof("[%d/%d] ADD    %s", size, i, file)
 				i++
-				// create directory
-				index := strings.LastIndex(file, "/")
-				if index != -1 {
-					dir := file[0:index]
-					log.Debugf("Create the directory %s for the file %s", dir, file)
-					err := ftp.MakeDir(dir)
-					check(err)
-				}
 				// upload file
 				uploadFile(options.Directory, file, ftp)
 			}
@@ -131,6 +130,21 @@ var (
 		TraverseChildren: true,
 	}
 )
+
+func createDirectory(ftp *ftp.ServerConn, dir, root string) {
+	log.Debugf("Create the directory %s", dir)
+	dirs := strings.Split(dir, "/")
+	for _, d := range dirs {
+		err := ftp.ChangeDir(d)
+		if err != nil {
+			err = ftp.MakeDir(d)
+			check(err)
+			err = ftp.ChangeDir(d)
+		}
+	}
+	err := ftp.ChangeDir(root)
+	check(err)
+}
 
 func closeFtp(ftp *ftp.ServerConn) {
 	if err := ftp.Quit(); err != nil {

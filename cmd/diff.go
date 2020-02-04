@@ -18,6 +18,7 @@ func init() {
 type diffFile struct {
 	OldVersion string   `yaml:"oldVersion"`
 	NewVersion string   `yaml:"newVersion"`
+	Dir        []string `yaml:"dir"`
 	Add        []string `yaml:"add"`
 	Update     []string `yaml:"update"`
 	Delete     []string `yaml:"delete"`
@@ -53,9 +54,12 @@ var (
 			}
 			diffFile.After = append(diffFile.After, hashFile)
 
+			var newDir []string
+
 			for k, v := range newHash.Files {
 				h := oldHash.Files[k]
 				if len(h) == 0 {
+					newDir = appendDir(newDir, k)
 					diffFile.Add = append(diffFile.Add, k)
 				} else {
 					if h != v {
@@ -64,13 +68,36 @@ var (
 				}
 			}
 
+			var existingDir []string
 			for k := range oldHash.Files {
+				existingDir = appendDir(existingDir, k)
 				vv := newHash.Files[k]
 				if len(vv) == 0 {
 					diffFile.Delete = append(diffFile.Delete, k)
 				}
 			}
 
+			if len(newDir) > 0 {
+				tmpDir := []string{newDir[0]}
+				for _, d := range newDir {
+					b, i := HasPrefix(tmpDir, d)
+					if b {
+						if i != -1 {
+							tmpDir[i] = d
+						}
+					} else {
+						tmpDir = appendDir(tmpDir, d)
+					}
+				}
+
+				for _, d := range tmpDir {
+					if !dirExists(existingDir, d) {
+						diffFile.Dir = append(diffFile.Dir, d)
+					}
+				}
+			}
+
+			log.Infof("Dir    %d", len(diffFile.Dir))
 			log.Infof("Add    %d", len(diffFile.Add))
 			log.Infof("Update %d", len(diffFile.Update))
 			log.Infof("Delete %d", len(diffFile.Delete))
@@ -83,6 +110,34 @@ var (
 		TraverseChildren: false,
 	}
 )
+
+func HasPrefix(tmpDir []string, dir string) (bool, int) {
+	for i, d2 := range tmpDir {
+		if strings.HasPrefix(d2, dir) {
+			return true, -1
+		} else if strings.HasPrefix(dir, d2) {
+			return true, i
+		}
+	}
+	return false, -1
+}
+
+func dirExists(existingDir []string, dir string) bool {
+	for _, w := range existingDir {
+		if strings.HasPrefix(w, dir) {
+			return true
+		}
+	}
+	return false
+}
+
+func appendDir(tmp []string, path string) []string {
+	d, i := dirName(path)
+	if i != -1 {
+		return append(tmp, d)
+	}
+	return tmp
+}
 
 func readDiffFlags() diffFlags {
 	mavenOptions := diffFlags{}

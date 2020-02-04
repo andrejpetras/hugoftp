@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Main the commands method
@@ -30,6 +31,14 @@ func addFlag(command *cobra.Command, name, shorthand string, value string, usage
 	command.Flags().StringP(name, shorthand, value, usage)
 	err := viper.BindPFlag(name, command.Flags().Lookup(name))
 	check(err)
+}
+
+func dirName(path string) (string, int) {
+	index := strings.LastIndex(path, "/")
+	if index != -1 {
+		return path[0:index], index
+	}
+	return "", -1
 }
 
 func writeToFile(filename string, data []byte) {
